@@ -8,28 +8,32 @@ const SRC = `./src`;
 const aliases = alias(SRC);
 
 const resolvedAliases = Object.fromEntries(
-  Object.entries(aliases).map(([key, value]) => [key, path.resolve(__dirname, value)]),
+  Object.entries(aliases).map(([key, value]) => [
+    key,
+    path.resolve(__dirname, value),
+  ])
 );
 
+let plugins = [];
+if (process.env.NODE_ENV === "production") {
+  plugins = [
+    new CompressionWebpackPlugin(),
+    new BrotliPlugin({
+      asset: "[path].br[query]",
+      test: /\.(js|css|html|svg|map)$/,
+      threshold: 10240,
+      minRatio: 0.8,
+    }),
+  ];
+}
 module.exports = {
   style: {
     postcss: {
-      plugins: [
-        require('tailwindcss'),
-        require('autoprefixer'),
-      ],
+      plugins: [require("tailwindcss"), require("autoprefixer")],
     },
   },
   webpack: {
     alias: resolvedAliases,
-    plugins: [
-      new CompressionWebpackPlugin(),
-      new BrotliPlugin({
-        asset: "[path].br[query]",
-        test: /\.(js|css|html|svg|map)$/,
-        threshold: 10240,
-        minRatio: 0.8,
-      }),
-    ],
+    plugins,
   },
-}
+};
